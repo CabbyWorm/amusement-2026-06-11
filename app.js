@@ -10,6 +10,11 @@ const LEVEL_BLURBS = [null,
   '+ vowel harmony, future tense',
   '+ verb agreement, negation',
   'everything · exotic word orders',
+  'ergative case · prefixes too · ×2 points',
+  '+ sandhi, reduplication, trap tiles · ×3',
+  '+ dual number · ×5',
+  '+ noun classes, rarest word orders · ×7',
+  'all of it · production only · ×10',
 ];
 
 /* ---------- persistence ---------- */
@@ -39,7 +44,7 @@ function el(tag, cls, text) {
 }
 
 function parseHash() {
-  const m = location.hash.match(/^#([a-z0-9]+)\.([1-5])$/);
+  const m = location.hash.match(/^#([a-z0-9]+)\.(10|[1-9])$/);
   return m ? { seed: m[1], level: +m[2] } : null;
 }
 
@@ -101,6 +106,7 @@ function renderLangbar() {
   bar.appendChild(el('span', null, 'Now decoding:'));
   bar.appendChild(el('span', 'langname', P.langName));
   bar.appendChild(el('span', 'chip', `Level ${S.level} · ${LEVELS[S.level].name}`));
+  if (P.mult > 1) bar.appendChild(el('span', 'chip', '×' + P.mult + ' pts'));
   bar.appendChild(el('span', 'chip', 'seed ' + S.seed));
 }
 
@@ -265,7 +271,7 @@ function nextQuestion() {
     S.done = true;
     const st = store.get('px:stats', { langs: 0, points: 0 });
     st.langs++;
-    st.points += S.scores.reduce((a, b) => a + b, 0);
+    st.points += S.scores.reduce((a, b) => a + b, 0) * P.mult;
     store.set('px:stats', st);
   }
   save();
@@ -283,19 +289,24 @@ function renderFinish(area) {
   const card = el('div', 'qcard finish');
   card.appendChild(el('div', null, `You have deciphered ${P.langName}.`));
   card.appendChild(el('div', 'stars', stars));
-  card.appendChild(el('div', 'big', `${total} / ${P.maxScore} pts`));
+  card.appendChild(el('div', 'big', P.mult > 1
+    ? `${total} / ${P.maxScore} × ${P.mult} = ${total * P.mult} pts banked`
+    : `${total} / ${P.maxScore} pts`));
+  if (S.level === 5) {
+    card.appendChild(el('div', 'eng', 'The rails continue past the Oracle: five bonus tiers await — ergative case, sandhi, dual number, noun classes…'));
+  }
   const row = el('div', 'btnrow');
   const again = el('button', 'btn', 'New language');
   again.addEventListener('click', () => start(newSeed(), S.level, false));
   row.appendChild(again);
-  if (S.level < 5) {
+  if (S.level < 10) {
     const up = el('button', 'btn primary', `Level ${S.level + 1} →`);
     up.addEventListener('click', () => start(newSeed(), S.level + 1, false));
     row.appendChild(up);
   } else {
-    const again5 = el('button', 'btn primary', 'Another at level 5 →');
-    again5.addEventListener('click', () => start(newSeed(), 5, false));
-    row.appendChild(again5);
+    const again10 = el('button', 'btn primary', 'Another at level 10 →');
+    again10.addEventListener('click', () => start(newSeed(), 10, false));
+    row.appendChild(again10);
   }
   card.appendChild(row);
   area.appendChild(card);
@@ -361,7 +372,13 @@ function renderMenu() {
   $('#menuStats').textContent = `★ ${st.points} lifetime points · ${st.langs} language${st.langs === 1 ? '' : 's'} deciphered`;
   const list = $('#lvlList');
   list.innerHTML = '';
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 10; i++) {
+    if (i === 6) {
+      const div = el('div', 'menu-stats', '— BEYOND THE ORACLE · bonus tiers —');
+      div.style.textAlign = 'center';
+      div.style.letterSpacing = '.08em';
+      list.appendChild(div);
+    }
     const b = el('button', 'lvlbtn' + (i === S.level ? ' cur' : ''));
     b.appendChild(el('span', 'n', String(i)));
     const span = el('span');

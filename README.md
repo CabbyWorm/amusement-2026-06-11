@@ -41,9 +41,27 @@ node test/test.js 300   # 1500 puzzles × all invariants
   and lexicon of the language you just cracked.
 - Share the URL (`#seed.level`) and a friend gets the *identical* language.
 
-Five difficulty tiers, from **Tourist** (plurals, past tense) to **Oracle of
-Babel** (vowel harmony, object case, verb agreement, negation, and word orders
-like OVS that no major human language uses).
+Ten difficulty tiers. Levels 1–5 run from **Tourist** (plurals, past tense) to
+**Oracle of Babel** (vowel harmony, object case, verb agreement, negation, and
+word orders like OVS that no major human language uses).
+
+Beyond the Oracle lie the **bonus tiers**, each adding real linguistic
+phenomena and a score multiplier:
+
+| | tier | adds | pts |
+|---|---|---|---|
+| 6 | Ergative Frontier | ergative–absolutive alignment (the *transitive subject* is the marked one), prefixing morphology | ×2 |
+| 7 | Mutation Marsh | vowel-elision sandhi, reduplicated plurals, wrong-harmony trap tiles | ×3 |
+| 8 | Twin Moon Pass | dual number | ×5 |
+| 9 | Vault of Tongues | animacy-based noun classes with adjective agreement, OSV/VOS orders | ×7 |
+| 10 | The Last Speaker | any combination of all of it, production-only questions | ×10 |
+
+The fairness machinery extends with them: ergative languages attest the same
+noun marked and bare, dual gets its own minimal pair, both noun-class
+agreement forms are always shown, and in strict mode every surface form in
+the language is guaranteed exactly one analysis (sandhi and reduplication can
+otherwise merge two words into one spelling). Levels 1–5 are frozen — the
+test suite pins their output by hash, so shared seed links never change.
 
 ## Hosting
 
