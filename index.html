@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Polyglot Express — decipher a language that didn't exist a second ago</title>
+<meta name="description" content="Every round invents a brand-new miniature language — sounds, suffixes, word order, vowel harmony — then challenges you to decipher it from a tiny corpus, linguistics-olympiad style.">
+<meta name="theme-color" content="#12141b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-512.png">
+<style>
+:root{
+  --bg:#12141b; --bg2:#171a24; --card:#1b202b; --card2:#232938;
+  --ink:#e9e7e0; --mut:#8e93a4; --amber:#e9b558; --amber-dim:#b88a3c;
+  --green:#86c98b; --red:#e07a6a; --line:#2b3142; --con:#f0d9a8;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{
+  margin:0; min-height:100%; color:var(--ink);
+  background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%) fixed;
+  font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  overscroll-behavior-y:contain;
+}
+.wrap{max-width:680px; margin:0 auto; padding:0 14px calc(60px + env(safe-area-inset-bottom))}
+header{
+  position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
+  background:rgba(18,20,27,.82); border-bottom:1px solid var(--line);
+  padding-top:env(safe-area-inset-top);
+}
+.hrow{max-width:680px; margin:0 auto; padding:10px 14px; display:flex; align-items:center; gap:10px}
+.logo{font-weight:800; letter-spacing:.14em; font-size:.92rem; white-space:nowrap}
+.logo small{display:block; font-weight:400; letter-spacing:.02em; color:var(--mut); font-size:.68rem}
+.spacer{flex:1}
+.iconbtn{
+  background:var(--card); border:1px solid var(--line); color:var(--ink);
+  border-radius:10px; min-width:40px; height:40px; font-size:1.05rem; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; padding:0 10px;
+}
+.iconbtn:active{transform:scale(.95)}
+.langbar{max-width:680px; margin:0 auto; padding:6px 14px 10px; font-size:.85rem; color:var(--mut); display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.langname{color:var(--con); font-family:Georgia,'Times New Roman',serif; font-size:1rem}
+.chip{background:var(--card); border:1px solid var(--line); border-radius:999px; padding:1px 10px; font-size:.78rem}
+
+h2{font-size:.78rem; letter-spacing:.18em; color:var(--mut); text-transform:uppercase; margin:22px 2px 10px; font-weight:700}
+.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:8px}
+.con{font-family:Georgia,'Times New Roman',serif; color:var(--con); font-size:1.08rem; letter-spacing:.02em}
+.eng{color:var(--mut); font-size:.9rem; margin-top:2px}
+.ct{cursor:pointer; border-radius:4px; padding:0 1px}
+.ct.hl{background:rgba(233,181,88,.34); color:#fff}
+.ct.hl2{background:rgba(233,181,88,.14)}
+
+.qmeta{display:flex; align-items:center; gap:10px; margin:0 2px 10px}
+.dots{display:flex; gap:6px}
+.dot{width:9px; height:9px; border-radius:50%; background:var(--card2); border:1px solid var(--line)}
+.dot.done{background:var(--green); border-color:var(--green)}
+.dot.cur{border-color:var(--amber); background:rgba(233,181,88,.3)}
+.qcard{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:10px}
+.qdir{font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; color:var(--amber); font-weight:700; margin-bottom:8px}
+.qsrc{font-size:1.25rem; margin-bottom:14px}
+.qsrc.con{font-size:1.3rem}
+.ansline{
+  min-height:56px; border:1.5px dashed #3a4156; border-radius:12px; padding:5px;
+  display:flex; flex-wrap:wrap; align-items:center; margin-bottom:10px;
+}
+.ansline.empty::after{content:'tap tiles below to build the translation'; color:#4c5266; font-size:.85rem; padding-left:8px}
+.bank{display:flex; flex-wrap:wrap; min-height:46px; padding:2px 0 6px}
+.tile{
+  background:var(--card2); border:1px solid #3a4156; color:var(--ink);
+  border-radius:10px; padding:9px 13px; margin:4px; font-size:1rem; cursor:pointer;
+  user-select:none; -webkit-user-select:none; line-height:1.2;
+  transition:transform .06s;
+}
+.tile:active{transform:scale(.94)}
+.tile.con{font-family:Georgia,'Times New Roman',serif; color:var(--con)}
+.tile.ok{border-color:var(--green); color:var(--green)}
+.tile.ghost{opacity:0; pointer-events:none}
+.btnrow{display:flex; gap:8px; margin-top:8px}
+.btn{
+  flex:1; border-radius:12px; border:1px solid var(--line); background:var(--card2);
+  color:var(--ink); font-size:.95rem; font-weight:600; padding:12px 8px; cursor:pointer;
+}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--amber); border-color:var(--amber); color:#1b1405}
+.btn.primary:disabled{opacity:.45}
+.btn:disabled{opacity:.45}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.verdict{min-height:24px; font-size:.92rem; margin-top:8px}
+.verdict.good{color:var(--green)} .verdict.bad{color:var(--red)}
+.gloss{margin-top:12px; border-top:1px solid var(--line); padding-top:10px; display:flex; flex-wrap:wrap; gap:6px}
+.gchip{background:#161a24; border:1px solid var(--line); border-radius:9px; padding:5px 9px; font-size:.82rem}
+.gchip b{font-family:Georgia,serif; color:var(--con); font-weight:400}
+.gchip span{color:var(--mut)}
+.scorebadge{margin-left:auto; font-size:.85rem; color:var(--mut)}
+
+.finish{text-align:center; padding:26px 16px}
+.finish .stars{font-size:2.2rem; letter-spacing:.2em; margin:6px 0}
+.finish .big{font-size:1.5rem; font-weight:800}
+.notes-list{margin:0; padding:0; list-style:none}
+.notes-list li{padding:7px 0; border-bottom:1px solid var(--line); font-size:.92rem; display:flex; gap:12px}
+.notes-list li b{min-width:118px; color:var(--amber); font-weight:600; flex-shrink:0}
+table.lex{width:100%; border-collapse:collapse; font-size:.92rem}
+table.lex td{padding:5px 6px; border-bottom:1px solid var(--line)}
+table.lex td:first-child{font-family:Georgia,serif; color:var(--con)}
+table.lex td:last-child{color:var(--mut); font-size:.8rem; text-align:right}
+
+.overlay{position:fixed; inset:0; background:rgba(8,9,13,.66); z-index:40; display:none}
+.overlay.show{display:block}
+.sheet{
+  position:fixed; left:0; right:0; bottom:0; z-index:50; max-height:86vh; overflow:auto;
+  background:var(--card); border:1px solid var(--line); border-bottom:none;
+  border-radius:18px 18px 0 0; padding:18px 18px calc(24px + env(safe-area-inset-bottom));
+  max-width:680px; margin:0 auto; display:none;
+}
+.sheet.show{display:block}
+.sheet h3{margin:2px 0 12px; font-size:1.05rem}
+.sheet p{color:var(--mut); font-size:.93rem}
+.sheet p b{color:var(--ink)}
+.lvlbtn{display:flex; gap:12px; width:100%; text-align:left; align-items:baseline;
+  background:var(--card2); border:1px solid var(--line); color:var(--ink);
+  border-radius:12px; padding:12px 14px; margin-bottom:8px; cursor:pointer; font-size:.95rem}
+.lvlbtn small{color:var(--mut); font-size:.8rem}
+.lvlbtn.cur{border-color:var(--amber)}
+.lvlbtn .n{font-weight:800; color:var(--amber); min-width:16px}
+textarea#notepad{
+  width:100%; min-height:38vh; background:#141822; color:var(--ink);
+  border:1px solid var(--line); border-radius:12px; padding:12px; font:inherit; resize:vertical;
+}
+.menu-stats{color:var(--mut); font-size:.88rem; margin:10px 0 16px}
+.rule{border:none; border-top:1px solid var(--line); margin:14px 0}
+noscript{display:block; padding:40px 20px; text-align:center; color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="logo">🚂 POLYGLOT EXPRESS<small>decipher a language born this second</small></div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="btnNotes" title="Field notebook">📓</button>
+    <button class="iconbtn" id="btnHelp" title="How to play">?</button>
+    <button class="iconbtn" id="btnMenu" title="Menu">☰</button>
+  </div>
+  <div class="langbar" id="langbar"></div>
+</header>
+
+<div class="wrap">
+  <noscript>Polyglot Express needs JavaScript — it invents a new language in your browser every round.</noscript>
+  <h2>Field corpus</h2>
+  <div id="corpus"></div>
+  <h2 id="qtitle">Question</h2>
+  <div class="qmeta"><div class="dots" id="dots"></div><div class="scorebadge" id="scorebadge"></div></div>
+  <div id="qarea"></div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="sheet" id="sheetHelp">
+  <h3>How to play</h3>
+  <p>Every language in this game is <b>invented the moment the round begins</b> — its sounds,
+  suffixes, word order, even vowel harmony are rolled from a seed. It exists in no dictionary,
+  no phrasebook, no corpus on Earth. Only here.</p>
+  <p><b>1.</b> Read the field corpus: genuine sentences with their translations.<br>
+  <b>2.</b> Crack the system: find the stems, isolate the suffixes, deduce the order.<br>
+  <b>3.</b> Translate sentences you've <b>never seen</b> — in both directions — by tapping tiles.</p>
+  <p><b>Fairness guarantee:</b> every stem and every suffix you need is attested somewhere
+  in the corpus. There is no guessing here, only deduction.</p>
+  <p><b>Tip:</b> tap any foreign word to light up its exact twins (bright) and likely
+  relatives (faint). Long journeys deserve a notebook — it's the 📓 up top.</p>
+  <button class="btn primary" id="helpClose" style="width:100%">To the corpus</button>
+</div>
+
+<div class="sheet" id="sheetMenu">
+  <h3>Route map</h3>
+  <div class="menu-stats" id="menuStats"></div>
+  <div id="lvlList"></div>
+  <hr class="rule">
+  <div class="btnrow">
+    <button class="btn" id="btnShare">Share this language</button>
+    <button class="btn" id="btnNew">New language</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheetNotes">
+  <h3>Field notebook</h3>
+  <p>Scratch space for your decipherment — saved on this device, per language.</p>
+  <textarea id="notepad" placeholder="e.g.  -ak = plural?&#10;tewe- = see"></textarea>
+</div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
