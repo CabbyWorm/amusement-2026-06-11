@@ -5,7 +5,7 @@
    attested in the corpus. */
 'use strict';
 require('../engine.js');
-const { genPuzzle, LEVELS } = globalThis.PX;
+const { genPuzzle, LEVELS, sentenceRecord, cloneMeaning } = globalThis.PX;
 
 const N = parseInt(process.argv[2] || '120', 10);
 let checked = 0;
@@ -96,12 +96,49 @@ for (let s = 0; s < N; s++) {
       // renders sane
       if (/undefined/.test(q.engStr) || /undefined/.test(q.conStr))
         fail(seed, level, `q${qi} broken render: ${q.engStr} / ${q.conStr}`);
+
+      // fairness: an English→conlang prompt must uniquely determine number.
+      // No flip of a number flag may keep the English identical while
+      // changing the expected conlang answer (the "fish" trap).
+      if (q.dir === 'e2c') {
+        const flips = [cloneMeaning(q.m)];
+        flips[0].s.pl = !flips[0].s.pl;
+        if (q.m.o) {
+          const f = cloneMeaning(q.m);
+          f.o.pl = !f.o.pl;
+          flips.push(f);
+        }
+        for (const f of flips) {
+          const r = sentenceRecord(P.L, f);
+          if (r.engStr === q.engStr && r.conStr !== q.conStr)
+            fail(seed, level, `q${qi} number-ambiguous prompt "${q.engStr}"`);
+        }
+      }
     }
 
     // English renders in corpus are sane and unique per meaning
     for (const r of P.corpus)
       if (/undefined/.test(r.engStr) || /undefined/.test(r.conStr))
         fail(seed, level, `corpus broken render: ${r.engStr} / ${r.conStr}`);
+  }
+}
+
+// Regression: the round from the original "fish" bug report. Its first
+// question was "the black fish will jump" → fish-PL, with the singular
+// equally valid. No question in this round may be number-ambiguous now.
+{
+  const P = genPuzzle('b9x6sg', 3);
+  checked++;
+  for (const [qi, q] of P.questions.entries()) {
+    if (q.dir !== 'e2c') continue;
+    const flips = [cloneMeaning(q.m)];
+    flips[0].s.pl = !flips[0].s.pl;
+    if (q.m.o) { const f = cloneMeaning(q.m); f.o.pl = !f.o.pl; flips.push(f); }
+    for (const f of flips) {
+      const r = sentenceRecord(P.L, f);
+      if (r.engStr === q.engStr && r.conStr !== q.conStr)
+        fail('b9x6sg', 3, `regression: q${qi} "${q.engStr}" is still ambiguous`);
+    }
   }
 }
 

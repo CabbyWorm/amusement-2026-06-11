@@ -494,6 +494,25 @@ function buildCorpus(rand, P) {
   return { corpus: rand.shuffle(out), keys };
 }
 
+/* English is the one language we don't generate, and it has quirks of its
+   own — "fish" is its own plural. A prompt is unfair in the English→conlang
+   direction if some number flip leaves the English unchanged but alters the
+   expected conlang answer: the player then can't deduce the right number. */
+function engNumberAmbiguous(L, m) {
+  const base = sentenceRecord(L, m);
+  const flips = [cloneMeaning(m)];
+  flips[0].s.pl = !flips[0].s.pl;
+  if (m.o) {
+    const f = cloneMeaning(m);
+    f.o.pl = !f.o.pl;
+    flips.push(f);
+  }
+  return flips.some((f) => {
+    const r = sentenceRecord(L, f);
+    return r.engStr === base.engStr && r.conStr !== base.conStr;
+  });
+}
+
 function buildQuestions(rand, P, corpusKeys) {
   const { feats, cfg, L } = P;
   const forces = [{ tense: 'past' }, { spl: true }, { tr: feats.acc ? true : undefined }];
@@ -511,7 +530,9 @@ function buildQuestions(rand, P, corpusKeys) {
     for (let t = 0; t < 300 && !rec; t++) {
       const f = t < 150 ? force : {}; // relax the constraint if we keep colliding
       const cand = sentenceRecord(L, sampleMeaning(rand, P, f));
-      if (!corpusKeys.has(cand.conStr) && !used.has(cand.conStr)) rec = cand;
+      if (corpusKeys.has(cand.conStr) || used.has(cand.conStr)) continue;
+      if (dir === 'e2c' && engNumberAmbiguous(L, cand.m)) continue;
+      rec = cand;
     }
     if (!rec) continue;
     used.add(rec.conStr);
@@ -636,5 +657,5 @@ function genPuzzle(seedStr, level) {
   return P;
 }
 
-root.PX = { genPuzzle, LEVELS, Rand, version: '1.0.0' };
+root.PX = { genPuzzle, LEVELS, Rand, sentenceRecord, cloneMeaning, version: '1.0.1' };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

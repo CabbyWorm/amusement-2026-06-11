@@ -1,5 +1,5 @@
 /* Polyglot Express — offline support */
-const CACHE = 'px-v1';
+const CACHE = 'px-v2';
 const ASSETS = ['./', './index.html', './engine.js', './app.js', './manifest.webmanifest', './icon.svg', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
